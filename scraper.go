@@ -53,6 +53,8 @@ func extractData(htmlContent string) {
 
 	publishExpire := getPublishExpire(doc)
 	currentDateArray, _ := extractCurrentDate(publishExpire)
+	expiresAt, _ := extractExpireDate(publishExpire) 
+
 	recentPosting := getRecentPosting(doc)
 	cfs, _ := extractCFS(recentPosting)
 	timePosted, _ := extractTimePosted(recentPosting)
@@ -65,6 +67,7 @@ func extractData(htmlContent string) {
 	fmt.Println("forecast length:", len(forecastArray))
 	fmt.Println("current date and expiry:", publishExpire)
 	fmt.Println("published:", currentDateArray)
+	fmt.Println("expires at:", expiresAt)
 
 }
 
@@ -96,7 +99,7 @@ func extractCurrentDate(publishExpire string) ([]string, error) {
 	var dateArray []string
 	if len(parts) >= 8 {
 		for i, v := range parts {
-			if (i < 0 &&  i < 7 ) {
+			if i >= 1  && i < 7 {
 				dateArray = append(dateArray, v)
 			}
 		}
@@ -105,6 +108,22 @@ func extractCurrentDate(publishExpire string) ([]string, error) {
 		return  []string{""}, errors.New("unable to extract publish date") 
 	}
 	return dateArray, nil
+}
+
+func extractExpireDate(publishExpire string) ([]string, error) {
+	parts := strings.Fields(publishExpire)
+	var expireArray []string
+	if len(parts) >= 8 {
+		for i, v := range parts {
+			if  i > 8 {
+				expireArray = append(expireArray, v)
+			}
+		}
+	} else {
+		fmt.Println("Unable to extract expire date.")
+		return  []string{""}, errors.New("unable to extract expire date") 
+	}
+	return expireArray, nil
 }
 
 func getRecentPosting(doc *goquery.Document) string {
