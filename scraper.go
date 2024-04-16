@@ -1,11 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
-	"errors"
 
 	//import colly & goQuery for use
 	"github.com/PuerkitoBio/goquery"
@@ -16,21 +16,24 @@ import (
 
 //create a function that checks if data should be posted to db
 
-func main() {
+func main(){
+	htmlContent := visitSite()	
+	date, currentDate, cfs, forecast, expire := extractData(htmlContent)
+	runDB(date, currentDate, cfs, forecast, expire)
+}
 
+func visitSite() string {
 	var htmlContent string
-
+	//create collector
 	c := colly.NewCollector(
 		colly.AllowURLRevisit(),
 	)
-
 	// be a good citizen and limit domain visits
 	c.Limit(&colly.LimitRule{
 		DomainGlob: "h2oline.com",
 		Delay: 60 *time.Second,
 		RandomDelay: 1 * time.Second,
 	})
-
 	c.OnResponse(func(r *colly.Response){
 		htmlContent = string(r.Body)
 	})
@@ -38,36 +41,34 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
-	extractData(htmlContent)
-	
-
+	return htmlContent	
 }
 
-func extractData(htmlContent string) {
+func extractData(htmlContent string) (date time.Time, currentDate string, cfs string, forecast []string, expire string ) {
 	//use goquery to find text-line needed
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	publishExpire := getPublishExpire(doc)
-	currentDateArray, _ := extractCurrentDate(publishExpire)
-	expiresAt, _ := extractExpireDate(publishExpire) 
-
+	currentDate, _ = extractCurrentDate(publishExpire)
+	date = time.Now().UTC()
+	expire , _ = extractExpireDate(publishExpire) 
 	recentPosting := getRecentPosting(doc)
-	cfs, _ := extractCFS(recentPosting)
+	cfs, _ = extractCFS(recentPosting)
 	timePosted, _ := extractTimePosted(recentPosting)
-
-	forecastArray := extractForecast(doc)
-
+	forecast = extractForecast(doc)
+	
 
 	fmt.Printf("%v CFS @ %v\n", cfs, timePosted)
-	fmt.Println(forecastArray)
-	fmt.Println("forecast length:", len(forecastArray))
+	fmt.Println(forecast)
+	fmt.Println("forecast length:", len(forecast))
 	fmt.Println("current date and expiry:", publishExpire)
-	fmt.Println("published:", currentDateArray)
-	fmt.Println("expires at:", expiresAt)
+	fmt.Println("published:", currentDate)
+	fmt.Println("expires at:", expire)
+
+	return date, currentDate, cfs, forecast, expire
+
 
 }
 
@@ -94,36 +95,37 @@ func getPublishExpire(doc *goquery.Document) (string){
  return desiredLine
 }
 
-func extractCurrentDate(publishExpire string) ([]string, error) {
+func extractCurrentDate(publishExpire string) (string, error) {
 	parts := strings.Fields(publishExpire)
-	var dateArray []string
+	var dateArray string
+
 	if len(parts) >= 8 {
 		for i, v := range parts {
-			if i >= 1  && i < 7 {
-				dateArray = append(dateArray, v)
+			if i >= 1  && i < 4 {
+				dateArray += v + " "
 			}
 		}
 	} else {
 		fmt.Println("Unable to extract publish date.")
-		return  []string{""}, errors.New("unable to extract publish date") 
+		return  "", errors.New("unable to extract publish date") 
 	}
 	return dateArray, nil
 }
 
-func extractExpireDate(publishExpire string) ([]string, error) {
+func extractExpireDate(publishExpire string) (string, error) {
 	parts := strings.Fields(publishExpire)
-	var expireArray []string
+	var expire string
 	if len(parts) >= 8 {
 		for i, v := range parts {
 			if  i > 8 {
-				expireArray = append(expireArray, v)
+				expire += v + " "
 			}
 		}
 	} else {
 		fmt.Println("Unable to extract expire date.")
-		return  []string{""}, errors.New("unable to extract expire date") 
+		return  "", errors.New("unable to extract expire date") 
 	}
-	return expireArray, nil
+	return expire, nil
 }
 
 func getRecentPosting(doc *goquery.Document) string {
