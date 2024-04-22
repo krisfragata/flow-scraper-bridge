@@ -6,7 +6,6 @@ import (
 	"log"
 	"strings"
 	"time"
-
 	//import colly & goQuery for use
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
@@ -18,8 +17,8 @@ import (
 
 func main(){
 	htmlContent := visitSite()	
-	date, currentDate, cfs, forecast, expire := extractData(htmlContent)
-	runDB(date, currentDate, cfs, forecast, expire)
+	date, currentDate, cfs, timePosted, forecast, expire := extractData(htmlContent)
+	runDB(date, currentDate, cfs, timePosted, forecast, expire)
 }
 
 func visitSite() string {
@@ -44,7 +43,7 @@ func visitSite() string {
 	return htmlContent	
 }
 
-func extractData(htmlContent string) (date time.Time, currentDate string, cfs string, forecast []string, expire string ) {
+func extractData(htmlContent string) (date time.Time, currentDate string, cfs string, timePosted string, forecast []string, expire string ) {
 	//use goquery to find text-line needed
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
 	if err != nil {
@@ -56,18 +55,11 @@ func extractData(htmlContent string) (date time.Time, currentDate string, cfs st
 	expire , _ = extractExpireDate(publishExpire) 
 	recentPosting := getRecentPosting(doc)
 	cfs, _ = extractCFS(recentPosting)
-	timePosted, _ := extractTimePosted(recentPosting)
+	timePosted, _ = extractTimePosted(recentPosting)
 	forecast = extractForecast(doc)
-	
 
-	fmt.Printf("%v CFS @ %v\n", cfs, timePosted)
-	fmt.Println(forecast)
-	fmt.Println("forecast length:", len(forecast))
-	fmt.Println("current date and expiry:", publishExpire)
-	fmt.Println("published:", currentDate)
-	fmt.Println("expires at:", expire)
 
-	return date, currentDate, cfs, forecast, expire
+	return date, currentDate, cfs, timePosted, forecast, expire
 
 
 }
