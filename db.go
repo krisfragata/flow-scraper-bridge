@@ -5,23 +5,27 @@ import (
 	"log"
 	"os"
 	"time"
+
 	// supa "github.com/nedpals/supabase-go"
-	"github.com/jackc/pgx/v4"
 	"context"
+
+	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
 )
 
-type Release struct{
+
+type OldRelease struct {
 	release_date string
+	// day          int8
 }
 
-type Data struct{
+type Data struct {
 	date_posted time.Time `json:"date_posted"`
-	date_string string `json:"date_string"`
-	current_cfs string `json:"current_cfs"`
-	time_posted string `json:"time_posted`
-	forecast    []string `json:"forecast"`
-	expires   string `json:"expires"`
+	date_string string    `json:"date_string"`
+	current_cfs string    `json:"current_cfs"`
+	time_posted string    `json:"time_posted`
+	forecast    []string  `json:"forecast"`
+	expires     string    `json:"expires"`
 }
 
 func runDB(date time.Time, currentDate string, cfs string, timePosted string, forecast []string, expire string) {
@@ -37,26 +41,28 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 	}
 	defer conn.Close(context.Background())
 
-	rows, err := conn.Query(context.Background(), "SELECT release_date FROM scheduled_release") 
+	rows, err := conn.Query(context.Background(), "SELECT release_date FROM scheduled_release")
 	if err != nil {
 		log.Fatal("Error querying database:", err)
 	}
 	defer rows.Close()
 
-	var releases []Release
+	var Oldreleases []OldRelease
+	var releases map[int]string
 	for rows.Next() {
-		var r Release
+		var r OldRelease
 		err := rows.Scan(&r.release_date)
-    if err != nil {
-        log.Fatal(err)
-    }
-   releases = append(releases, r)
+		if err != nil {
+			log.Fatal(err)
+		}
+		dayOfYear(r)
+		Oldreleases = append(Oldreleases, r)
 	}
 	if err := rows.Err(); err != nil {
-    log.Fatal(err)
+		log.Fatal(err)
 	}
-	
 
+	fmt.Println(Oldreleases)
 	fmt.Println(releases)
 
 	// insert data into supabase
@@ -68,7 +74,6 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 		forecast:    forecast,
 		expires:     expire,
 	}
-
 
 	fmt.Println("data from scheduled release", row, "END")
 	// fmt.Println(results)
