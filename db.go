@@ -52,13 +52,16 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 		fmt.Println("data:", val)
 	}
 	current := dayOfYear(currentDate)
-
 	isReleaseToday := isRelease(current)
-
 	fmt.Println("is it a release today?", isReleaseToday)
-	// fmt.Println(results)
+
+	//begin query
+	query := `INSERT INTO daily_data (date_posted, date_string, current_cfs, time_posted, forecast, expires, scheduled_release) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	rows, err := conn.Query(context.Background(), query, date, currentDate, cfs, timePosted, forecast, expire, isReleaseToday )
+	if err != nil {
+		log.Fatal("Error querying database:", err)
+	}
+	defer rows.Close()
+	// fmt.Println(rows)
 }
 
-func postDB(){
-
-}

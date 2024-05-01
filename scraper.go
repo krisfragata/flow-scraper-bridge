@@ -188,14 +188,14 @@ func extractForecastStr(forecastArray []string) string{
 	}
 	fmt.Println("parts:", parts)
 	partsArr := strings.Fields(parts)
-	for _, val := range partsArr{
+	for index, val := range partsArr{
 		if(val == "Until"){
 			u = true
 		} 
 		if(u && !c){
 			forecast += val + " "
 		}
-		if (val == "CFS"){
+		if (val == "CFS" && index == len(parts) - 1){
 			c = true
 		}
 	}
