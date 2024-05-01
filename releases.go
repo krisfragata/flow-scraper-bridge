@@ -4,7 +4,7 @@ import(
 	"fmt"
 )
 
-func releases(date int) bool{
+func isRelease(date int) bool{
 	releasesMap := map[int]string {
 		146: "Saturday, May 25",
 		147: "Sunday, May 26",

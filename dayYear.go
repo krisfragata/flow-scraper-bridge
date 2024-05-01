@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-func dayOfYear (dateString OldRelease) int{
-	parsedDate, err := time.Parse("Monday, January 2" , dateString.release_date)
+func dayOfYear (dateString string) int{
+	parsedDate, err := time.Parse("Monday, January 2" , dateString)
 	if err != nil {
 		panic(err)
 	}

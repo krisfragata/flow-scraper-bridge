@@ -43,7 +43,7 @@ func visitSite() string {
 	return htmlContent	
 }
 
-func extractData(htmlContent string) (date time.Time, currentDate string, cfs string, timePosted string, forecast []string, expire string ) {
+func extractData(htmlContent string) (date time.Time, currentDate string, cfs string, timePosted string, forecast string, expire string ) {
 	//use goquery to find text-line needed
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
 	if err != nil {
@@ -56,7 +56,8 @@ func extractData(htmlContent string) (date time.Time, currentDate string, cfs st
 	recentPosting := getRecentPosting(doc)
 	cfs, _ = extractCFS(recentPosting)
 	timePosted, _ = extractTimePosted(recentPosting)
-	forecast = extractForecast(doc)
+	forecastHtml := extractForecastHtml(doc)
+	forecast = extractForecastStr(forecastHtml)
 
 
 	return date, currentDate, cfs, timePosted, forecast, expire
@@ -89,19 +90,20 @@ func getPublishExpire(doc *goquery.Document) (string){
 
 func extractCurrentDate(publishExpire string) (string, error) {
 	parts := strings.Fields(publishExpire)
-	var dateArray string
+	var date string
 
 	if len(parts) >= 8 {
 		for i, v := range parts {
 			if i >= 1  && i < 4 {
-				dateArray += v + " "
+				date += v + " "
 			}
 		}
 	} else {
 		fmt.Println("Unable to extract publish date.")
 		return  "", errors.New("unable to extract publish date") 
 	}
-	return dateArray, nil
+	date = strings.TrimSpace(date)
+	return date, nil
 }
 
 func extractExpireDate(publishExpire string) (string, error) {
@@ -158,7 +160,7 @@ func extractTimePosted(recentPosting string) (string, error){
 	}
 }
 
-func extractForecast(doc *goquery.Document) ([]string) {
+func extractForecastHtml(doc *goquery.Document) ([]string) {
 	var forecastArray []string
 	var forecastHtml string
 	doc.Find("div:contains('The following forecast for flows') + div").Each(func(i int, e *goquery.Selection) {
@@ -172,4 +174,52 @@ func extractForecast(doc *goquery.Document) ([]string) {
 
 	forecastArray = strings.Split(forecastHtml, "<br/>")
 	return forecastArray
+}
+
+func extractForecastStr(forecastArray []string) string{
+	var forecast string
+	var parts string
+	fmt.Printf("forecast Arr is %v and its length is %v \n", forecastArray, len(forecastArray))
+	u := false
+	c := false
+
+	for _, val := range forecastArray{
+		parts += val + " "
+	}
+	fmt.Println("parts:", parts)
+	partsArr := strings.Fields(parts)
+	for _, val := range partsArr{
+		if(val == "Until"){
+			u = true
+		} 
+		if(u && !c){
+			forecast += val + " "
+		}
+		if (val == "CFS"){
+			c = true
+		}
+	}
+	forecast = strings.TrimSpace(forecast)
+
+	 // Length of the string
+	 length := len(forecast)
+
+	 // Define the number of characters to remove from the end
+	 charactersToRemove := 4 // Length of "</b>"
+
+	 // Check if the string is long enough to contain the characters to remove
+	 if length >= charactersToRemove {
+			 // Trim the string to remove the last characters
+			 trimBrk := forecast[:length-charactersToRemove]
+
+			 // Print the trimmed string
+			 fmt.Println("Original string:", forecast)
+			 fmt.Println("Trimmed string:", trimBrk)
+			 forecast = trimBrk
+	 } else {
+			 // Handle the case where the string is shorter than the characters to remove
+			 fmt.Println("The string is too short to remove characters.")
+	 }
+
+	return forecast
 }

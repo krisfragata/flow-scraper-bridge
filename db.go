@@ -5,10 +5,7 @@ import (
 	"log"
 	"os"
 	"time"
-
-	// supa "github.com/nedpals/supabase-go"
 	"context"
-
 	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
 )
@@ -16,7 +13,6 @@ import (
 
 type OldRelease struct {
 	release_date string
-	// day          int8
 }
 
 type Data struct {
@@ -28,7 +24,7 @@ type Data struct {
 	expires     string    `json:"expires"`
 }
 
-func runDB(date time.Time, currentDate string, cfs string, timePosted string, forecast []string, expire string) {
+func runDB(date time.Time, currentDate string, cfs string, timePosted string, forecast string, expire string) {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
@@ -41,40 +37,28 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 	}
 	defer conn.Close(context.Background())
 
-	rows, err := conn.Query(context.Background(), "SELECT release_date FROM scheduled_release")
-	if err != nil {
-		log.Fatal("Error querying database:", err)
-	}
-	defer rows.Close()
-
-	var Oldreleases []OldRelease
-	// var releases map[int]string
-	for rows.Next() {
-		var r OldRelease
-		err := rows.Scan(&r.release_date)
-		if err != nil {
-			log.Fatal(err)
-		}
-		dayOfYear(r)
-		Oldreleases = append(Oldreleases, r)
-	}
-	if err := rows.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Old releases", Oldreleases)
-	// fmt.Println(releases)
-
 	// insert data into supabase
-	row := Data{
-		date_posted: date,
-		date_string: currentDate,
-		current_cfs: cfs,
-		time_posted: timePosted,
-		forecast:    forecast,
-		expires:     expire,
+	row := []any{
+		 date,
+	currentDate,
+		 cfs,
+		 timePosted,
+	  forecast,
+		  expire,
 	}
 
-	fmt.Println("data from scheduled release", row, "END")
+	// fmt.Println("data from scheduled release", row, "END")
+	for _, val := range row{
+		fmt.Println("data:", val)
+	}
+	current := dayOfYear(currentDate)
+
+	isReleaseToday := isRelease(current)
+
+	fmt.Println("is it a release today?", isReleaseToday)
 	// fmt.Println(results)
+}
+
+func postDB(){
+
 }
