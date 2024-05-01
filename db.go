@@ -48,7 +48,7 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 	defer rows.Close()
 
 	var Oldreleases []OldRelease
-	var releases map[int]string
+	// var releases map[int]string
 	for rows.Next() {
 		var r OldRelease
 		err := rows.Scan(&r.release_date)
@@ -62,8 +62,8 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 		log.Fatal(err)
 	}
 
-	fmt.Println(Oldreleases)
-	fmt.Println(releases)
+	fmt.Println("Old releases", Oldreleases)
+	// fmt.Println(releases)
 
 	// insert data into supabase
 	row := Data{
