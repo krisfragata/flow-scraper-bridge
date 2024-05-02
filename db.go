@@ -11,16 +11,12 @@ import (
 )
 
 
-type OldRelease struct {
-	release_date string
-}
-
 type Data struct {
 	date_posted time.Time `json:"date_posted"`
 	date_string string    `json:"date_string"`
 	current_cfs string    `json:"current_cfs"`
 	time_posted string    `json:"time_posted`
-	forecast    []string  `json:"forecast"`
+	forecast    string  `json:"forecast"`
 	expires     string    `json:"expires"`
 }
 
@@ -37,31 +33,38 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 	}
 	defer conn.Close(context.Background())
 
-	// insert data into supabase
-	row := []any{
-		 date,
-	currentDate,
-		 cfs,
-		 timePosted,
-	  forecast,
-		  expire,
-	}
-
-	// fmt.Println("data from scheduled release", row, "END")
-	for _, val := range row{
-		fmt.Println("data:", val)
-	}
 	current := dayOfYear(currentDate)
 	isReleaseToday := isRelease(current)
-	fmt.Println("is it a release today?", isReleaseToday)
 
-	//begin query
-	query := `INSERT INTO daily_data (date_posted, date_string, current_cfs, time_posted, forecast, expires, scheduled_release) VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	rows, err := conn.Query(context.Background(), query, date, currentDate, cfs, timePosted, forecast, expire, isReleaseToday )
+	//check db's recent posting
+	var existingData Data
+	query := `SELECT date_string, current_cfs, time_posted FROM daily_data ORDER BY id DESC LIMIT 1`
+	row := conn.QueryRow(context.Background(), query)
+	err = row.Scan(&existingData.date_string, &existingData.current_cfs, &existingData.time_posted)
 	if err != nil {
-		log.Fatal("Error querying database:", err)
+		log.Fatalf("Error querying database: %v", err)
 	}
-	defer rows.Close()
-	// fmt.Println(rows)
+
+
+	fmt.Printf("time posted: %v existing time: %v \n", timePosted, existingData.time_posted)
+	//check if recent posting matches new data's cfs
+	if existingData.date_string == currentDate && existingData.current_cfs == cfs && existingData.time_posted == timePosted {
+		// Update the most recent row
+		updateQuery := `UPDATE daily_data SET date_posted = $1, forecast = $3, expires = $4 WHERE date_string = $5 AND current_cfs = $6 AND time_posted = $2`
+		_, err := conn.Exec(context.Background(), updateQuery, date, timePosted, forecast, expire, currentDate, cfs)
+		if err != nil {
+			log.Fatal("Error updating database:", err)
+		}
+		fmt.Println("Updated existing row in the database")
+	} else {
+		// Insert new data into the database
+		insertQuery := `INSERT INTO daily_data (date_posted, date_string, current_cfs, time_posted, forecast, expires, scheduled_release) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+		_, err := conn.Exec(context.Background(), insertQuery, date, currentDate, cfs, timePosted, forecast, expire, isReleaseToday)
+		if err != nil {
+			log.Fatal("Error inserting into database:", err)
+		}
+		fmt.Println("Inserted new row into the database")
+	}
+
 }
 

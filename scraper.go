@@ -179,14 +179,12 @@ func extractForecastHtml(doc *goquery.Document) ([]string) {
 func extractForecastStr(forecastArray []string) string{
 	var forecast string
 	var parts string
-	fmt.Printf("forecast Arr is %v and its length is %v \n", forecastArray, len(forecastArray))
 	u := false
 	c := false
 
 	for _, val := range forecastArray{
 		parts += val + " "
 	}
-	fmt.Println("parts:", parts)
 	partsArr := strings.Fields(parts)
 	for index, val := range partsArr{
 		if(val == "Until"){
