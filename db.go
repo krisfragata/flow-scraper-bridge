@@ -46,7 +46,6 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 	}
 
 
-	fmt.Printf("time posted: %v existing time: %v \n", timePosted, existingData.time_posted)
 	//check if recent posting matches new data's cfs
 	if existingData.date_string == currentDate && existingData.current_cfs == cfs && existingData.time_posted == timePosted {
 		// Update the most recent row

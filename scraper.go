@@ -211,8 +211,6 @@ func extractForecastStr(forecastArray []string) string{
 			 trimBrk := forecast[:length-charactersToRemove]
 
 			 // Print the trimmed string
-			 fmt.Println("Original string:", forecast)
-			 fmt.Println("Trimmed string:", trimBrk)
 			 forecast = trimBrk
 	 } else {
 			 // Handle the case where the string is shorter than the characters to remove
