@@ -25,7 +25,7 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	supabaseUrl := os.Getenv("SUPABASE_URL")
+	var supabaseUrl string = os.Getenv("SUPABASE_URL")
 
 	conn, err := pgx.Connect(context.Background(), supabaseUrl)
 	if err != nil {
@@ -33,8 +33,8 @@ func runDB(date time.Time, currentDate string, cfs string, timePosted string, fo
 	}
 	defer conn.Close(context.Background())
 
-	current := dayOfYear(currentDate)
-	isReleaseToday := isRelease(current)
+	var current int = dayOfYear(currentDate)
+	var isReleaseToday bool = isRelease(current)
 
 	//check db's recent posting
 	var existingData Data

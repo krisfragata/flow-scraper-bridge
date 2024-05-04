@@ -9,10 +9,6 @@ func dayOfYear (dateString string) int{
 	if err != nil {
 		panic(err)
 	}
-
 	day := parsedDate.YearDay()
-
-	// fmt.Println("day of year:", day)
-
 	return day
 }

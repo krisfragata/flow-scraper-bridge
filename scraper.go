@@ -49,19 +49,19 @@ func extractData(htmlContent string) (date time.Time, currentDate string, cfs st
 	if err != nil {
 		log.Fatal(err)
 	}
-	publishExpire := getPublishExpire(doc)
-	currentDate, _ = extractCurrentDate(publishExpire)
+	var publishExpire string  = getPublishExpire(doc)
+	var recentPosting string = getRecentPosting(doc)
+	var forecastHtml []string = extractForecastHtml(doc)
+
+	currentDate, _  = extractCurrentDate(publishExpire)
 	date = time.Now().UTC()
-	expire , _ = extractExpireDate(publishExpire) 
-	recentPosting := getRecentPosting(doc)
 	cfs, _ = extractCFS(recentPosting)
 	timePosted, _ = extractTimePosted(recentPosting)
-	forecastHtml := extractForecastHtml(doc)
 	forecast = extractForecastStr(forecastHtml)
+	expire , _ = extractExpireDate(publishExpire) 
 
 
 	return date, currentDate, cfs, timePosted, forecast, expire
-
 
 }
 
@@ -72,7 +72,7 @@ func getPublishExpire(doc *goquery.Document) (string){
 		text := e.Text()
 		if strings.Contains(text, "Published:") {
 			found = true
-			lines := strings.Split(text, "\n")
+			var lines  []string = strings.Split(text, "\n")
 			for _, line := range lines {
 				if strings.Contains(line, "Published:") && strings.Contains(line, "Expires:") {
 					desiredLine = strings.TrimSpace(line)
@@ -89,7 +89,7 @@ func getPublishExpire(doc *goquery.Document) (string){
 }
 
 func extractCurrentDate(publishExpire string) (string, error) {
-	parts := strings.Fields(publishExpire)
+	var parts []string = strings.Fields(publishExpire)
 	var date string
 
 	if len(parts) >= 8 {
@@ -107,7 +107,7 @@ func extractCurrentDate(publishExpire string) (string, error) {
 }
 
 func extractExpireDate(publishExpire string) (string, error) {
-	parts := strings.Fields(publishExpire)
+	var parts []string = strings.Fields(publishExpire)
 	var expire string
 	if len(parts) >= 8 {
 		for i, v := range parts {
@@ -139,9 +139,9 @@ func getRecentPosting(doc *goquery.Document) string {
 }
 
 func extractCFS(recentPosting string) (string, error) {
-	parts := strings.Fields(recentPosting)
+	var parts []string = strings.Fields(recentPosting)
 	if len(parts) >= 8 {
-		cfs := parts[11]
+		var cfs string = parts[11]
 		return cfs, nil
 	} else {
 		fmt.Println("Unable to extract CFS measurement.")
@@ -150,9 +150,9 @@ func extractCFS(recentPosting string) (string, error) {
 }
 
 func extractTimePosted(recentPosting string) (string, error){
-	parts := strings.Fields(recentPosting)
+	var parts []string = strings.Fields(recentPosting)
 	if len(parts) >= 8 {
-		time := parts[1] + " " + parts[2] + " " + parts[3]
+		var time string = parts[1] + " " + parts[2] + " " + parts[3]
 		return time, nil
 	} else {
 		fmt.Println("Unable to extract time.")
@@ -200,7 +200,7 @@ func extractForecastStr(forecastArray []string) string{
 	forecast = strings.TrimSpace(forecast)
 
 	 // Length of the string
-	 length := len(forecast)
+	 var length int = len(forecast)
 
 	 // Define the number of characters to remove from the end
 	 charactersToRemove := 4 // Length of "</b>"
@@ -209,7 +209,6 @@ func extractForecastStr(forecastArray []string) string{
 	 if length >= charactersToRemove {
 			 // Trim the string to remove the last characters
 			 trimBrk := forecast[:length-charactersToRemove]
-
 			 // Print the trimmed string
 			 forecast = trimBrk
 	 } else {
