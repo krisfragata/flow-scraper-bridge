@@ -22,3 +22,8 @@
 
 # Go workspace file
 go.work
+
+#compiled file
+./flow-scraper
+
+/bin
